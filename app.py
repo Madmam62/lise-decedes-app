@@ -3,48 +3,69 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = 'votre_cle_secrete_changez_la'
+app.secret_key = 'lise2026'
+
+def get_db_connection():
+    conn = sqlite3.connect('database.db', check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    conn = sqlite3.connect('database.db')
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS decedes (nom TEXT UNIQUE)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS cotiseurs (nom TEXT UNIQUE)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS decedes 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE NOT NULL)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS cotiseurs 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE NOT NULL)''')
     conn.commit()
     conn.close()
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    decedes = [row[0] for row in c.execute('SELECT nom FROM decedes ORDER BY nom').fetchall()]
-    cotiseurs = [row[0] for row in c.execute('SELECT nom FROM cotiseurs ORDER BY nom').fetchall()]
+    init_db()  # CRÉE TABLES AUTOMATIQUE
+    conn = get_db_connection()
+    decedes = [row['nom'] for row in conn.execute('SELECT nom FROM decedes ORDER BY nom').fetchall()]
+    cotiseurs = [row['nom'] for row in conn.execute('SELECT nom FROM cotiseurs ORDER BY nom').fetchall()]
     conn.close()
     return render_template('index.html', decedes=decedes, cotiseurs=cotiseurs)
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if 'mdp' not in session:
-        if request.method == 'POST' and request.form['mdp'] == 'admin123':
-            session['mdp'] = True
+    if 'logged_in' not in session:
+        if request.method == 'POST' and request.form.get('mdp') == 'admin123':
+            session['logged_in'] = True
+            init_db()
             return redirect(url_for('admin'))
         return '''
-        <form method=post><input name=mdp placeholder="Mot de passe admin"><input type=submit value="Entrer"></form>
+        <form method=post style="max-width:300px;margin:50px auto;">
+        <h2>Admin (admin123)</h2>
+        <input name=mdp type=password style="width:100%;padding:10px;">
+        <br><button type=submit style="width:100%;padding:10px;background:blue;color:white;">Entrer</button>
+        </form><a href="/">← Public</a>
         '''
     
+    init_db()
     if request.method == 'POST':
-        nom = request.form['nom']
-        type_list = request.form['type']
-        conn = sqlite3.connect('database.db')
-        c = conn.cursor()
-        c.execute(f'INSERT OR IGNORE INTO {"decedes" if type_list=="decedes" else "cotiseurs"} (nom) VALUES (?)', (nom,))
-        conn.commit()
-        conn.close()
+        nom = request.form.get('nom', '').strip()
+        typ = request.form.get('type')
+        if nom:
+            conn = get_db_connection()
+            conn.execute(f'INSERT OR IGNORE INTO {typ} (nom) VALUES (?)', (nom,))
+            conn.commit()
+            conn.close()
         return redirect(url_for('admin'))
     
-    return render_template('admin.html')
+    conn = get_db_connection()
+    decedes = [row['nom'] for row in conn.execute('SELECT nom FROM decedes ORDER BY nom').fetchall()]
+    cotiseurs = [row['nom'] for row in conn.execute('SELECT nom FROM cotiseurs ORDER BY nom').fetchall()]
+    conn.close()
+    return render_template('admin.html', decedes=decedes, cotiseurs=cotiseurs)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    init_db()
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
