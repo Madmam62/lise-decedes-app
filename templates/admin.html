@@ -1,7 +1,31 @@
-<h1>Ajout Admin</h1>
+<h1>Admin - Gestion Listes</h1>
+<h3>Ajouter</h3>
 <form method=post>
-Nom: <input name=nom required><br>
-Type: <select name=type><option value=decedes>Décédés</option><option value=cotiseurs>Cotiseurs</option></select><br>
-<input type=submit value="Ajouter">
+Nom: <input name=nom required style="width:200px;"><br>
+<select name=type>
+<option value="decedes">→ Décédé</option>
+<option value="cotiseurs">→ Cotiseur</option>
+</select>
+<button>Ajouter</button>
 </form>
-<a href="/">Retour Public</a>
+
+<h3>Décédés ({{decedes|length}})</h3>
+<ul>
+{% for nom in decedes %}
+<li>{{nom}} 
+<a href="/delete_decede/{{nom}}">[SUPPR]</a> 
+<a href="/move_decede_to_cotiseur/{{nom}}">[→ Cotiseur]</a>
+</li>
+{% endfor %}
+</ul>
+
+<h3>Cotiseurs ({{cotiseurs|length}})</h3>
+<ul>
+{% for nom in cotiseurs %}
+<li>{{nom}} 
+<a href="/delete_cotiseur/{{nom}}">[SUPPR]</a> 
+<a href="/move_cotiseur_to_decede/{{nom}}">[→ Décédé]</a>
+</li>
+{% endfor %}
+</ul>
+<a href="/logout">Déconnexion</a> | <a href="/">Public</a>
