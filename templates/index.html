@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><title>Lise Décédés & Cotiseurs</title>
+<style>body{font-family:Arial; max-width:1200px;}
+.decedes{ background:#ffebee; padding:20px; margin:20px 0;}
+.cotiseurs{ overflow-x:auto; white-space:nowrap;}
+.cotiseurs ul{ display:inline-flex; list-style:none; padding:0;}
+.cotiseurs li{ background:#e3f2fd; margin:5px; padding:10px; border-radius:5px; display:inline-block;}
+a{text-decoration:none; color:blue;}
+</style></head>
+<body>
+<h1>Lise des Personnes</h1>
+<div class="decedes">
+<h2>Décédés ({{decedes|length}})</h2>
+<ul>{% for nom in decedes %}<li>{{nom}}</li>{% endfor %}</ul>
+</div>
+<div class="cotiseurs">
+<h2>Cotiseurs / Donateurs ({{cotiseurs|length}}) - Scroll horizontal</h2>
+<ul>{% for nom in cotiseurs %}<li>{{nom}}</li>{% endfor %}</ul>
+</div>
+<a href="/admin">Admin Ajout</a>
+</body></html>
