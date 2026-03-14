@@ -66,6 +66,44 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('index'))
 
+@app.route('/delete_decede/<nom>')
+def delete_decede(nom):
+    init_db()
+    conn = get_db_connection()
+    conn.execute('DELETE FROM decedes WHERE nom = ?', (nom,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/delete_cotiseur/<nom>')
+def delete_cotiseur(nom):
+    init_db()
+    conn = get_db_connection()
+    conn.execute('DELETE FROM cotiseurs WHERE nom = ?', (nom,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/move_decede_to_cotiseur/<nom>')
+def move_decede_to_cotiseur(nom):
+    init_db()
+    conn = get_db_connection()
+    conn.execute('DELETE FROM decedes WHERE nom = ?', (nom,))
+    conn.execute('INSERT OR IGNORE INTO cotiseurs (nom) VALUES (?)', (nom,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/move_cotiseur_to_decede/<nom>')
+def move_cotiseur_to_decede(nom):
+    init_db()
+    conn = get_db_connection()
+    conn.execute('DELETE FROM cotiseurs WHERE nom = ?', (nom,))
+    conn.execute('INSERT OR IGNORE INTO decedes (nom) VALUES (?)', (nom,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
